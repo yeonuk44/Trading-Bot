@@ -1,6 +1,6 @@
 const accountsInfo = require("./apis/assets");
 const orderCryptocurrency = require("./apis/order");
-const getCandlesInfo = require("./apis/ticker");
+const technicalBollingerBand = require("./technicals/bb");
 
 // console.log("Get Accounts Info: Before ordering Cryptocurrency");
 
@@ -35,11 +35,16 @@ const getCandlesInfo = require("./apis/ticker");
 //     console.error(error);
 //   });
 
+const getCandlesInfo = require("./apis/ticker");
 getCandlesInfo
   .getCandlesInfo()
   .then((result) => {
-    console.log(result);
+    const tradePrices = result.map((candle) => candle.trade_price);
+    console.log(technicalBollingerBand.bb(tradePrices));
   })
   .catch((error) => {
     console.error(error);
   });
+
+// console.log(tradePrices.length);
+//
