@@ -1,5 +1,6 @@
 const accountsInfo = require("./apis/assets");
 const orderCryptocurrency = require("./apis/order");
+const getCandlesInfo = require("./apis/ticker");
 const technicalBollingerBand = require("./technicals/bb");
 
 // console.log("Get Accounts Info: Before ordering Cryptocurrency");
@@ -35,16 +36,24 @@ const technicalBollingerBand = require("./technicals/bb");
 //     console.error(error);
 //   });
 
-const getCandlesInfo = require("./apis/ticker");
-getCandlesInfo
-  .getCandlesInfo()
-  .then((result) => {
-    const tradePrices = result.map((candle) => candle.trade_price);
-    console.log(technicalBollingerBand.bb(tradePrices));
-  })
-  .catch((error) => {
-    console.error(error);
-  });
+/**
+ * Trading Bot
+ */
+const cron = require("node-cron");
 
-// console.log(tradePrices.length);
-//
+async function fetchData() {
+  try {
+    const result = await getCandlesInfo.getDailyCandlesInfo();
+    const tradePrices = result.map((candle) => candle.trade_price);
+    const dailyBBValue = technicalBollingerBand.bb(tradePrices);
+    console.log("Fetched data at", new Date());
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+// cron 표현식: 매일 00:00에 실행 (UTC 기준, 한국 시간 00:00)
+const cronExpression = "0 15 * * *";
+
+// cron 작업 설정
+cron.schedule(cronExpression, fetchData);
