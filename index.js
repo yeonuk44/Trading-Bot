@@ -1,3 +1,6 @@
+const dotenv = require("dotenv");
+dotenv.config();
+
 const request = require("request");
 const uuidv4 = require("uuid/v4");
 const sign = require("jsonwebtoken").sign;
