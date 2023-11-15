@@ -3,7 +3,7 @@ const request = require("request");
 function getCandlesInfo() {
   const options = {
     method: "GET",
-    url: "https://api.upbit.com/v1/candles/days?count=1&market=KRW-BTC",
+    url: "https://api.upbit.com/v1/candles/days?count=3&market=KRW-BTC",
     headers: { accept: "application/json" },
   };
 
@@ -12,7 +12,12 @@ function getCandlesInfo() {
       if (error) {
         reject(error);
       } else {
-        resolve(body);
+        try {
+          const responseBody = JSON.parse(body);
+          resolve(responseBody);
+        } catch (parseError) {
+          reject(parseError);
+        }
       }
     });
   });
