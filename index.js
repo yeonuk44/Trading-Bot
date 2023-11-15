@@ -39,21 +39,41 @@ const technicalBollingerBand = require("./technicals/bb");
 /**
  * Trading Bot
  */
-const cron = require("node-cron");
+// const daily = getCandlesInfo
+//   .getDailyCandlesInfo()
+//   .then((result) => {
+//     return result;
+//   })
+//   .catch((error) => {
+//     console.error(error);
+//   });
+
+// console.log(daily);
+
+getCandlesInfo
+  .getMinuteCandleInfo()
+  .then((result) => {})
+  .catch((error) => {
+    console.error(error);
+  });
 
 async function fetchData() {
   try {
-    const result = await getCandlesInfo.getDailyCandlesInfo();
-    const tradePrices = result.map((candle) => candle.trade_price);
-    const dailyBBValue = technicalBollingerBand.bb(tradePrices);
-    console.log("Fetched data at", new Date());
+    const dailyFetchData = await getCandlesInfo.getDailyCandlesInfo();
+    console.log(dailyFetchData);
+
+    // 1분마다 실행
+    const minuteInterval = setInterval(async () => {
+      const minuteFetchData = await getCandlesInfo.getMinuteCandleInfo();
+      console.log(minuteFetchData);
+      // 여기에 필요한 로직 추가
+
+      // 종료 조건을 설정하려면 clearInterval 사용
+      // clearInterval(minuteInterval);
+    }, 60000);
   } catch (error) {
     console.error(error);
   }
 }
 
-// cron 표현식: 매일 00:00에 실행 (UTC 기준, 한국 시간 00:00)
-const cronExpression = "0 15 * * *";
-
-// cron 작업 설정
-cron.schedule(cronExpression, fetchData);
+fetchData();
