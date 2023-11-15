@@ -1,9 +1,36 @@
 const request = require("request");
+const technicalBollingerBand = require("../technicals/bb");
 
-function getCandlesInfo() {
+function getDailyCandlesInfo() {
   const options = {
     method: "GET",
     url: "https://api.upbit.com/v1/candles/days?count=30&market=KRW-BTC",
+    headers: { accept: "application/json" },
+  };
+
+  return new Promise((resolve, reject) => {
+    request(options, (error, response, body) => {
+      if (error) {
+        reject(error);
+      } else {
+        try {
+          const responseBody = JSON.parse(body);
+          const tradePrices = responseBody.map((candle) => candle.trade_price);
+          const dailyBBValue = technicalBollingerBand.bb(tradePrices);
+          resolve(dailyBBValue);
+        } catch (parseError) {
+          reject(parseError);
+        }
+      }
+    });
+  });
+}
+
+function getMinuteCandleInfo() {
+  const options = {
+    method: "GET",
+
+    url: "https://api.upbit.com/v1/candles/minutes/1?market=KRW-BTC&count=1",
     headers: { accept: "application/json" },
   };
 
@@ -24,5 +51,6 @@ function getCandlesInfo() {
 }
 
 module.exports = {
-  getCandlesInfo,
+  getDailyCandlesInfo,
+  getMinuteCandleInfo,
 };
