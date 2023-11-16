@@ -332,4 +332,88 @@ movingAverages 배열은 계산된 이동 평균을 저장합니다.
 표준 편차는 이동 평균을 기반으로 계산됩니다.
 상단 및 하단 밴드는 표준 편차를 사용하여 결정됩니다.
 
+## 자동 암호화폐 매매 봇 구현 5(with.Upbit Open API)
+이전 글에선 Bollinger Bands가 무엇인지 알아보고 해당 기술적 지표를 코드를 통해 직접 구현하였습니다. 이번 글에선 작성된 코드들에 대해 단계별 가이드를 준비했습니다.
 
+### 1. 필수 모듈 설치
+```javascript
+npm install request
+npm install uuid
+npm install crypto
+npm install jsonwebtoken
+npm install querystring
+npm install dotenv
+```
+
+### 2. API 키 및 시크릿 설정
+Upbit Open API를 사용하기 위해 Upbit 개발자 센터에서 API 키와 시크릿을 발급받아 .env 파일에 저장하세요.
+```javasciprt
+UPBIT_OPEN_API_ACCESS_KEY=your_access_key
+UPBIT_OPEN_API_SECRET_KEY=your_secret_key
+UPBIT_OPEN_API_SERVER_URL=https://api.upbit.com
+```
+
+### 3. 필수 파일 및 모듈 로드
+```javascript
+const request = require("request");
+const uuidv4 = require("uuid/v4");
+const crypto = require("crypto");
+const sign = require("jsonwebtoken").sign;
+const queryEncode = require("querystring").encode;
+const dotenv = require("dotenv");
+const accountsInfo = require("./apis/assets");
+const orderCryptocurrency = require("./apis/order");
+const getCandlesInfo = require("./apis/ticker");
+
+dotenv.config();
+```
+
+### 4. 필요한 함수 구현
+findKRW 및 findBTC: KRW 및 BTC의 인덱스를 찾는 함수
+fetchData: 데이터를 수집하고 매매 전략을 실행하는 메인 함수
+
+해당 글의 개요의 첨부된 코드 저장소를 참고 부탁드립니다.
+```javascript
+async function findKRW() {
+  // ...
+}
+
+async function findBTC() {
+  // ...
+}
+
+async function fetchData() {
+  try {
+    // ...
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+fetchData();
+```
+
+### 5. 주기적인 API 호출 및 매매 전략 실행
+```javascript
+const minuteInterval = setInterval(async () => {
+  // ...
+}, 60000);
+```
+
+### 6. 매매 전략 구현
+이 예제에서는 볼린저 밴드를 이용한 간단한 매매 전략을 사용합니다.
+```javascript
+if (minuteCandlePrice <= lowerBand * 1.05) {
+  // 매수 주문 로직
+} else if (minuteCandlePrice >= upperBand * 0.95) {
+  // 매도 주문 로직
+}
+```
+제가 작성한 자동 암호화폐 매매 봇 시리즈물을 정독하셨다면 어떤 투자 기술 지표를 활용했는지 알 수 있습니다.
+
+### 7. 보완 및 추가 작업
+이 프로젝트를 확장하려면 다음과 같은 작업을 고려할 수 있습니다.
+전략 최적화: 현재 전략은 간단하게 구현되었지만, 더 복잡한 전략을 구현하여 수익을 극대화할 수 있습니다.
+
+### 8. 마무리
+이러한 단계를 참고하여 자동 매매 봇을 개발하면서 JavaScript 및 암호화폐 거래에 대한 이해를 높일 수 있을 것입니다. 부족한 부분은 이메일로 연락주시면 답변을 드리겠습니다. **고생하셨습니다.**
