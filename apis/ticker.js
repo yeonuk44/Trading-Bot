@@ -43,8 +43,8 @@ function getMinuteCandleInfo() {
           const responseBody = JSON.parse(body);
           resolve(
             responseBody.map((candle) => ({
-              time: candle.candle_date_time_kst,
               price: candle.trade_price,
+              time: candle.candle_date_time_kst,
             }))
           );
         } catch (parseError) {
