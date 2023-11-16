@@ -134,7 +134,6 @@ async function fetchData() {
         let currentBTCtoKRW = isBalance[idxBTC]
           ? isBalance[idxBTC]
           : 0 * minuteCandlePrice;
-        console.log(currentBTCtoKRW);
         if (isCurrency[idxBTC] === "BTC" && currentBTCtoKRW > 5000) {
           console.log("====================================================");
           // 매도 주문
