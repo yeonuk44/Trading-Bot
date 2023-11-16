@@ -2,20 +2,6 @@ const accountsInfo = require("./apis/assets");
 const orderCryptocurrency = require("./apis/order");
 const getCandlesInfo = require("./apis/ticker");
 
-// console.log("Get Accounts Info: Before ordering Cryptocurrency");
-// accountsInfo
-//   .getAllAccountsInfo()
-//   .then((result) => {
-//     const balances = result.map((item) => item.balance);
-//     const coun = result.map((co) => co.currency);
-//     console.log(balances[0]);
-//     console.log(coun[0]);
-//     console.log("KRW" === coun[0]);
-//   })
-//   .catch((error) => {
-//     console.error(error);
-//   });
-
 async function findKRW() {
   const getAllAccountsInfo = await accountsInfo.getAllAccountsInfo();
   const isCurrency = getAllAccountsInfo.map((item) => item.currency);
@@ -37,7 +23,11 @@ async function findBTC() {
 }
 
 /**
+ * INFO:
  * Trading Bot
+ * TODO:
+ * 1. Currently, the bot trades in minute timeframes, so if you're looking for a short hit, you'll need to fetch information and trade in secondary timeframes.
+ * 2. When you change the coin type and market type, you have to manually change everything. We need to create a constants file to manage the variables globally so that we can automate it.
  */
 
 async function fetchData() {
