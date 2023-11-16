@@ -30,34 +30,53 @@ ord_type *	주문 타입 (필수)
 identifier	조회용 사용자 지정값 (선택)	String (Uniq 값 사용)
 */
 
-const body = {
-  market: "KRW-BTC",
-  side: "bid",
-  //   volume: "0.01",
-  price: "5000",
-  ord_type: "price",
-};
+function bidOrderCryptocurrency(bidBody) {
+  const query = queryEncode(bidBody);
+  const hash = crypto.createHash("sha512");
+  const queryHash = hash.update(query, "utf-8").digest("hex");
+  const payload = {
+    access_key: access_key,
+    nonce: uuidv4(),
+    query_hash: queryHash,
+    query_hash_alg: "SHA512",
+  };
+  const token = sign(payload, secret_key);
 
-const query = queryEncode(body);
-
-const hash = crypto.createHash("sha512");
-const queryHash = hash.update(query, "utf-8").digest("hex");
-
-const payload = {
-  access_key: access_key,
-  nonce: uuidv4(),
-  query_hash: queryHash,
-  query_hash_alg: "SHA512",
-};
-
-const token = sign(payload, secret_key);
-
-function orderCryptocurrency() {
   const options = {
     method: "POST",
     url: server_url + "/v1/orders",
     headers: { Authorization: `Bearer ${token}` },
-    json: body,
+    json: bidBody,
+  };
+
+  return new Promise((resolve, reject) => {
+    request(options, (error, response, body) => {
+      if (error) {
+        reject(error);
+      } else {
+        resolve(body);
+      }
+    });
+  });
+}
+
+function askOrderCryptocurrency(askBody) {
+  const query = queryEncode(askBody);
+  const hash = crypto.createHash("sha512");
+  const queryHash = hash.update(query, "utf-8").digest("hex");
+  const payload = {
+    access_key: access_key,
+    nonce: uuidv4(),
+    query_hash: queryHash,
+    query_hash_alg: "SHA512",
+  };
+  const token = sign(payload, secret_key);
+
+  const options = {
+    method: "POST",
+    url: server_url + "/v1/orders",
+    headers: { Authorization: `Bearer ${token}` },
+    json: askBody,
   };
 
   return new Promise((resolve, reject) => {
@@ -72,5 +91,6 @@ function orderCryptocurrency() {
 }
 
 module.exports = {
-  orderCryptocurrency,
+  bidOrderCryptocurrency,
+  askOrderCryptocurrency,
 };
