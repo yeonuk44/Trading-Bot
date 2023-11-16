@@ -60,13 +60,15 @@ getCandlesInfo
 async function fetchData() {
   try {
     const dailyFetchData = await getCandlesInfo.getDailyCandlesInfo();
+    console.log("Daily BB Value: ");
     console.log(dailyFetchData);
 
     // 1분마다 실행
     const minuteInterval = setInterval(async () => {
       const minuteFetchData = await getCandlesInfo.getMinuteCandleInfo();
+      console.log("1 Minute Candle Info: ");
       console.log(minuteFetchData);
-      // 여기에 필요한 로직 추가
+      //
 
       // 종료 조건을 설정하려면 clearInterval 사용
       // clearInterval(minuteInterval);
