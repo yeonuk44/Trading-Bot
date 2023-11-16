@@ -1,3 +1,4 @@
+const fs = require("fs");
 const request = require("request");
 
 function getMarketsInfo() {
@@ -14,6 +15,10 @@ function getMarketsInfo() {
       } else {
         try {
           const responseBody = JSON.parse(body);
+          // 결과값을 JSON 파일에 저장
+          const jsonResult = JSON.stringify(responseBody, null, 2);
+          fs.writeFileSync("./markets_info.json", jsonResult);
+
           resolve(responseBody);
         } catch (parseError) {
           reject(parseError);
