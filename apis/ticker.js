@@ -41,7 +41,7 @@ function getMinuteCandleInfo() {
       } else {
         try {
           const responseBody = JSON.parse(body);
-          resolve(responseBody);
+          resolve(responseBody.map((candle) => candle.trade_price));
         } catch (parseError) {
           reject(parseError);
         }
