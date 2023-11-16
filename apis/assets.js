@@ -19,7 +19,17 @@ function getAllAccountsInfo() {
       if (error) {
         reject(error);
       } else {
-        resolve(body);
+        try {
+          const responseBody = JSON.parse(body);
+          resolve(
+            responseBody.map((info) => ({
+              currency: info.currency,
+              balance: info.balance,
+            }))
+          );
+        } catch (parseError) {
+          reject(parseError);
+        }
       }
     });
   });
