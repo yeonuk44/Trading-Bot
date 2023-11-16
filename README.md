@@ -278,4 +278,58 @@ getMinuteCandleInfo()
 볼린저 밴드는 존 볼린저(John Bollinger)가 개발한 기술적 분석 도구로, 금융 시장에서 추세, 변동성 및 잠재적인 반전 지점을 식별하는 데 사용되는 인기 있는 도구입니다. 
 이는 상중하 3개의 밴드로 구성되어 있으며, 중간 밴드는 단순 이동 평균이며 상단 및 하단 밴드는 중간 밴드에서의 표준 편차를 기반으로 계산됩니다.
 
+### Bollinger Bands 이해하기
+1. 중간 밴드
+중간 밴드는 단순 이동 평균(SMA)으로서 특정 기간 동안의 평균 가격을 나타냅니다.
+2. 상단 및 하단 밴드
+상단 밴드: 중간 밴드와 표준 편차의 두 배를 더한 값으로 계산됩니다.
+하단 밴드: 중간 밴드에서 표준 편차의 두 배를 뺀 값으로 계산됩니다.
+이러한 밴드들은 중간 밴드를 중심으로 동적인 범위를 제공하며, 고변동성 기간에는 확장되고 저변동성 기간에는 축소됩니다.
+
+### 차트의 기술적 지표를 코드로 구현하기
+```javascript
+function bb(tradePrices) {
+  const period = 20;
+  const movingAverages = [];
+
+  // 이동 평균 계산
+  for (let i = 0; i <= tradePrices.length - period; i++) {
+    const average =
+      tradePrices.slice(i, i + period).reduce((sum, price) => sum + price, 0) /
+      period;
+    movingAverages.push(average);
+  }
+
+  // 표준 편차 계산
+  const standardDeviation = Math.sqrt(
+    movingAverages.reduce(
+      (sum, avg) => sum + Math.pow(avg - movingAverages[0], 2),
+      0
+    ) / period
+  );
+
+  // 볼린저 밴드 계산
+  const upperBand = movingAverages[0] + 2 * standardDeviation;
+  const middleBand = movingAverages[0];
+  const lowerBand = movingAverages[0] - 2 * standardDeviation;
+
+  // 결과를 객체로 저장
+  const bollingerBands = {
+    "상단 밴드": upperBand,
+    "중간 밴드": middleBand,
+    "하단 밴드": lowerBand,
+  };
+
+  return bollingerBands;
+}
+
+module.exports = {
+  bb,
+};
+```
+이 구현에서:
+movingAverages 배열은 계산된 이동 평균을 저장합니다.
+표준 편차는 이동 평균을 기반으로 계산됩니다.
+상단 및 하단 밴드는 표준 편차를 사용하여 결정됩니다.
+
 
