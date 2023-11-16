@@ -1,6 +1,13 @@
 const accountsInfo = require("./apis/assets");
 const orderCryptocurrency = require("./apis/order");
 const getCandlesInfo = require("./apis/ticker");
+const oneTimeFunction = require("./apis/market");
+
+/**
+ * INFO:
+ * Get markets info & Save result value to JSON file
+ */
+// oneTimeFunction.getMarketsInfo();
 
 async function findKRW() {
   const getAllAccountsInfo = await accountsInfo.getAllAccountsInfo();
