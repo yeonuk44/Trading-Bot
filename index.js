@@ -26,6 +26,16 @@ async function findKRW() {
   }
 }
 
+async function findBTC() {
+  const getAllAccountsInfo = await accountsInfo.getAllAccountsInfo();
+  const isCurrency = getAllAccountsInfo.map((item) => item.currency);
+  for (let i = 0; i < isCurrency.length; i++) {
+    if (isCurrency[i] === "BTC") {
+      return i;
+    }
+  }
+}
+
 /**
  * Trading Bot
  */
@@ -33,67 +43,108 @@ async function findKRW() {
 async function fetchData() {
   try {
     const dailyFetchData = await getCandlesInfo.getDailyCandlesInfo();
+
+    console.log("----------------------------------------------------");
     console.log("Daily BB Value: ");
     console.log(dailyFetchData);
+    console.log("----------------------------------------------------");
+
+    const upperBand = dailyFetchData["Upper Band"];
+    const middleBand = dailyFetchData["Middle Band"];
+    const lowerBand = dailyFetchData["Lower Band"];
 
     const getAllAccountsInfo = await accountsInfo.getAllAccountsInfo();
-
+    const isCurrency = getAllAccountsInfo.map((item) => item.currency);
+    const isBalance = getAllAccountsInfo.map((item) => item.balance);
     const idxKRW = await findKRW();
-    console.log(getAllAccountsInfo[idxKRW]);
+    const idxBTC = await findBTC();
+
+    console.log("보유중인 자산: ");
+    console.log(getAllAccountsInfo);
+    console.log("----------------------------------------------------");
 
     // 자산 운용 상한선 기준: 내 자산의 50%까지만 가용
-    // if (isCurrency[0] === "KRW") {
-    //   const limitBalance = isBalance[0] / 2;
-    //   console.log("현재 가용이 가능한 자산의 금액: " + limitBalance);
-    // } else {
-    //   console.log("더 이상 KRW가 없습니다.");
-    //   clearInterval(minuteInterval);
-    // }
+    if (isCurrency[idxKRW] === "KRW") {
+      const limitBalance = isBalance[idxKRW] / 2;
+      console.log("보유중인 KRW: " + isBalance[idxKRW]);
+      console.log("현재 가용이 가능한 자산의 금액: " + limitBalance);
+      console.log("----------------------------------------------------");
+    } else {
+      console.log("더 이상 KRW가 없습니다.");
+      // 트레이딩 봇 종료
+      clearInterval(minuteInterval);
+    }
 
-    // 1분마다 실행
+    // API Call every minute
     const minuteInterval = setInterval(async () => {
       const minuteFetchData = await getCandlesInfo.getMinuteCandleInfo();
-      console.log("1 Minute Candle Info: ");
-      console.log(minuteFetchData);
+      const minuteCandlePrice = minuteFetchData.map((item) => item.price);
+      const minuteCandleTime = minuteFetchData.map((item) => item.time);
+
+      console.log("====================================================");
+      console.log(
+        minuteCandleTime + " 종가: " + minuteCandlePrice + " 입니다."
+      );
       /**
        * INFO:
        * 매매 프로세스
        */
 
-      // if (minuteFetchData[0] <= dailyFetchData[2] * 1.05) {
-      //   // 1. BB의 Lower Band 보다 가격이 낮을 때 구매
-      //   const isCurrency = await accountsInfo
-      //     .getAllAccountsInfo()
-      //     .map((item) => item.currency);
-      //   const isBalance = await accountsInfo
-      //     .getAllAccountsInfo()
-      //     .map((item) => item.balance);
-      //   if (isCurrency[0] === "KRW" && isBalance[0] > 5000) {
-      //     if (isCurrency[1] === "BTC" && isBalance)
-      //       await orderCryptocurrency
-      //         .orderCryptocurrency()
-      //         .then((result) => {
-      //           console.log("구매하였습니다.");
-      //           console.log(result);
-      //         })
-      //         .catch((error) => {
-      //           console.error(error);
-      //         });
-      //   }
-      // } else if (minuteFetchData[0] <= dailyFetchData[0] * 0.95) {
-      //   // 2. BB의 Upper Band 보다 가격이 높을 때 판매
-
-      //   if (isCurrency[1] === "BTC" && isBalance[1] > 5000) {
-      //     await orderCryptocurrency
-      //       .orderCryptocurrency()
-      //       .then((result) => {
-      //         console.log(result);
-      //       })
-      //       .catch((error) => {
-      //         console.error(error);
-      //       });
-      //   }
-      // }
+      if (minuteCandlePrice <= lowerBand * 1.05) {
+        // 1. BB의 Lower Band 보다 가격이 낮을 때 구매
+        console.log("====================================================");
+        console.log(
+          lowerBand +
+            " 의 가격에 근접한 종가로 현재 종가는 " +
+            minuteCandlePrice +
+            " 입니다."
+        );
+        const isCurrency = await accountsInfo
+          .getAllAccountsInfo()
+          .map((item) => item.currency);
+        const isBalance = await accountsInfo
+          .getAllAccountsInfo()
+          .map((item) => item.balance);
+        if (
+          isCurrency[idxKRW] === "KRW" &&
+          isBalance[idxKRW] > 5000 &&
+          limitBalance > isBalance[idxKRW]
+        ) {
+          console.log("====================================================");
+          await orderCryptocurrency
+            .orderCryptocurrency()
+            .then((result) => {
+              console.log("5000KRW 만큼의 BTC를 구매하였습니다.");
+              console.log(result);
+            })
+            .catch((error) => {
+              console.error(error);
+            });
+        }
+      } else if (minuteCandlePrice <= upperBand * 0.95) {
+        // 2. BB의 Upper Band 보다 가격이 높을 때 판매
+        console.log("====================================================");
+        console.log(
+          upperBand +
+            " 의 가격에 근접한 종가로 현재 종가는 " +
+            minuteCandlePrice +
+            " 입니다."
+        );
+        // 토큰의 KRW 가치 환산 Response value가 없어 따로 계산
+        let currentBTCtoKRW = isBalance[idxBTC] * minuteCandlePrice;
+        if (isCurrency[idxBTC] === "BTC" && currentBTCtoKRW > 5000) {
+          console.log("====================================================");
+          await orderCryptocurrency
+            .orderCryptocurrency()
+            .then((result) => {
+              console.log("5000KRW 만큼의 BTC를 판매하였습니다.");
+              console.log(result);
+            })
+            .catch((error) => {
+              console.error(error);
+            });
+        }
+      }
 
       // 종료 조건을 설정하려면 clearInterval 사용
       // clearInterval(minuteInterval);
