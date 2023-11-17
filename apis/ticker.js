@@ -1,10 +1,11 @@
 const request = require("request");
 const technicalBollingerBand = require("../technicals/bb");
+const tradingToken = require("../constant");
 
 function getDailyCandlesInfo() {
   const options = {
     method: "GET",
-    url: "https://api.upbit.com/v1/candles/days?count=30&market=KRW-BTC",
+    url: `https://api.upbit.com/v1/candles/days?count=23&market=${tradingToken.TRADING_TOKEN.krw}-${tradingToken.TRADING_TOKEN.mainToken}`,
     headers: { accept: "application/json" },
   };
 
@@ -30,7 +31,7 @@ function getMinuteCandleInfo() {
   const options = {
     method: "GET",
 
-    url: "https://api.upbit.com/v1/candles/minutes/1?market=KRW-BTC&count=1",
+    url: `https://api.upbit.com/v1/candles/minutes/1?market=${tradingToken.TRADING_TOKEN.krw}-${tradingToken.TRADING_TOKEN.mainToken}&count=1`,
     headers: { accept: "application/json" },
   };
 
