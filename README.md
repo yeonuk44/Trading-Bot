@@ -415,5 +415,100 @@ if (minuteCandlePrice <= lowerBand * 1.05) {
 이 프로젝트를 확장하려면 다음과 같은 작업을 고려할 수 있습니다.
 전략 최적화: 현재 전략은 간단하게 구현되었지만, 더 복잡한 전략을 구현하여 수익을 극대화할 수 있습니다.
 
+## 자동 암호화폐 매매 봇 구현 6(with.Upbit Open API)
+이전 글에선 작성된 코드들에 대해 단계별 가이드를 준비했습니다. 이번 글에선 더 많은 암호화폐를 거래하기 위해 마켓의 정보를 조회하고 그 결과 값을 json 파일에 내보내는 것까지 진행해보겠습니다.
+
+### 마켓 코드 조회
+```javascript
+const request = require('request');
+
+const options = {
+  method: 'GET',
+  url: 'https://api.upbit.com/v1/market/all?isDetails=false',
+  headers: {accept: 'application/json'}
+};
+
+request(options, function (error, response, body) {
+  if (error) throw new Error(error);
+
+  console.log(body);
+});
+```
+이렇게만 해도 불러와집니다. 그러나 저는 모듈화를 사용해 필요할 때만 사용되길 원하기 때문에 새롭게 market.js를 만들고 해당 함수를 내보낼 수 있는 형태로 만들고자 합니다.
+
+### 나의 마켓코드 조회
+```javascript
+// market.js
+const request = require("request");
+
+function getMarketsInfo() {
+  const options = {
+    method: "GET",
+    url: "https://api.upbit.com/v1/market/all?isDetails=false",
+    headers: { accept: "application/json" },
+  };
+
+  return new Promise((resolve, reject) => {
+    request(options, (error, response, body) => {
+      if (error) {
+        reject(error);
+      } else {
+        try {
+          const responseBody = JSON.parse(body);
+          resolve(responseBody);
+        } catch (parseError) {
+          reject(parseError);
+        }
+      }
+    });
+  });
+}
+
+module.exports = {
+  getMarketsInfo,
+};
+```
+이렇게 하면 해당 함수가 호출될 때 responseBody에서 선언한 대로 json의 형태로 결과를 출력해줍니다.
+
+더 나아가 저는 json으로 파일을 생성해서 결과값을 내보내길 바라기에 이에 맞는 코드 수정을 해보겠습니다.
+
+### JSON 파일 생성 코드
+```javascript 
+const fs = require("fs");
+const request = require("request");
+
+function getMarketsInfo() {
+  const options = {
+    method: "GET",
+    url: "https://api.upbit.com/v1/market/all?isDetails=false",
+    headers: { accept: "application/json" },
+  };
+
+  return new Promise((resolve, reject) => {
+    request(options, (error, response, body) => {
+      if (error) {
+        reject(error);
+      } else {
+        try {
+          const responseBody = JSON.parse(body);
+
+          // JSON 파일 생성
+          fs.writeFileSync("marketsInfo.json", JSON.stringify(responseBody, null, 2));
+          
+          resolve(responseBody);
+        } catch (parseError) {
+          reject(parseError);
+        }
+      }
+    });
+  });
+}
+
+module.exports = {
+  getMarketsInfo,
+};
+```
+
+
 ### 8. 마무리
 이러한 단계를 참고하여 자동 매매 봇을 개발하면서 JavaScript 및 암호화폐 거래에 대한 이해를 높일 수 있을 것입니다. 부족한 부분은 이메일로 연락주시면 답변을 드리겠습니다. **고생하셨습니다.**
