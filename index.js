@@ -1,3 +1,4 @@
+const tradingToken = require("./constant");
 const accountsInfo = require("./apis/assets");
 const orderCryptocurrency = require("./apis/order");
 const getCandlesInfo = require("./apis/ticker");
@@ -13,17 +14,17 @@ async function findKRW() {
   const getAllAccountsInfo = await accountsInfo.getAllAccountsInfo();
   const isCurrency = getAllAccountsInfo.map((item) => item.currency);
   for (let i = 0; i < isCurrency.length; i++) {
-    if (isCurrency[i] === "KRW") {
+    if (isCurrency[i] === `${tradingToken.TRADING_TOKEN.krw}`) {
       return i;
     }
   }
 }
 
-async function findBTC() {
+async function findMainToken() {
   const getAllAccountsInfo = await accountsInfo.getAllAccountsInfo();
   const isCurrency = getAllAccountsInfo.map((item) => item.currency);
   for (let i = 0; i < isCurrency.length; i++) {
-    if (isCurrency[i] === "BTC") {
+    if (isCurrency[i] === tradingToken.TRADING_TOKEN.mainToken) {
       return i;
     }
   }
@@ -39,6 +40,7 @@ async function findBTC() {
 
 async function fetchData() {
   try {
+    const tradingToken = require("./constant");
     const dailyFetchData = await getCandlesInfo.getDailyCandlesInfo();
 
     console.log("----------------------------------------------------");
@@ -54,19 +56,21 @@ async function fetchData() {
     const isCurrency = getAllAccountsInfo.map((item) => item.currency);
     const isBalance = getAllAccountsInfo.map((item) => item.balance);
     const idxKRW = await findKRW();
-    const idxBTC = await findBTC();
+    const idxMainToken = await findMainToken();
 
     console.log("보유중인 자산: ");
     console.log(getAllAccountsInfo);
     console.log("----------------------------------------------------");
-
     // 자산 운용 상한선 기준: 내 자산의 50%까지만 가용
-    if (isCurrency[idxKRW] === "KRW") {
+
+    if (isCurrency[idxKRW] === tradingToken.TRADING_TOKEN.krw) {
       const limitBalance = isBalance[idxKRW] / 2;
-      console.log("보유중인 KRW: " + isBalance[idxKRW]);
+      console.log(
+        `보유중인 ${tradingToken.TRADING_TOKEN.krw}: ${isBalance[idxKRW]}`
+      );
       console.log("현재 가용이 가능한 자산의 금액: " + limitBalance);
     } else {
-      console.log("더 이상 KRW가 없습니다.");
+      console.log(`더 이상 ${tradingToken.TRADING_TOKEN.krw}가 없습니다.`);
       // 트레이딩 봇 종료
       clearInterval(minuteInterval);
     }
@@ -103,14 +107,14 @@ async function fetchData() {
           .getAllAccountsInfo()
           .map((item) => item.balance);
         if (
-          isCurrency[idxKRW] === "KRW" &&
+          isCurrency[idxKRW] === tradingToken.TRADING_TOKEN.krw &&
           isBalance[idxKRW] > 5000 &&
           limitBalance > isBalance[idxKRW]
         ) {
           console.log("====================================================");
           // 매수 주문
           const bidBody = {
-            market: "KRW-BTC",
+            market: `${tradingToken.TRADING_TOKEN.krw}-${tradingToken.TRADING_TOKEN.mainToken}`,
             side: "bid",
             price: "5000",
             ord_type: "price",
@@ -118,7 +122,9 @@ async function fetchData() {
           await orderCryptocurrency
             .bidOrderCryptocurrency(bidBody)
             .then((result) => {
-              console.log("5000KRW 만큼의 BTC를 매수하였습니다.");
+              console.log(
+                `${bidBody.price}${tradingToken.TRADING_TOKEN.krw} 만큼의 ${tradingToken.TRADING_TOKEN.mainToken}를 매수했습니다.`
+              );
               console.log(result);
               console.log("보유중인 자산: ");
               console.log(getAllAccountsInfo);
@@ -138,22 +144,35 @@ async function fetchData() {
             " 입니다."
         );
         // 토큰의 KRW 가치 환산 Response value가 없어 따로 계산
-        let currentBTCtoKRW = isBalance[idxBTC]
-          ? isBalance[idxBTC]
+        let currentMainTokentoKRW = isBalance[idxMainToken]
+          ? isBalance[idxMainToken]
           : 0 * minuteCandlePrice;
-        if (isCurrency[idxBTC] === "BTC" && currentBTCtoKRW > 5000) {
+        console.log("====================================================");
+        console.log(
+          `현재 내가 가진 토큰의 ${
+            tradingToken.TRADING_TOKEN.krw
+          } 금액은 ${currentMainTokentoKRW}이고, 토큰의 메인 balance는 ${
+            isBalance[idxMainToken] ? isBalance[idxMainToken] : 0
+          } 입니다.`
+        );
+        if (
+          isCurrency[idxMainToken] === tradingToken.TRADING_TOKEN.mainToken &&
+          currentMainTokentoKRW > 5000
+        ) {
           console.log("====================================================");
           // 매도 주문
           const askBody = {
-            market: "KRW-BTC",
+            market: `${tradingToken.TRADING_TOKEN.krw}-${tradingToken.TRADING_TOKEN.mainToken}`,
             side: "ask",
-            volume: isBalance[idxBTC], // 0 ~ 1
+            volume: isBalance[idxMainToken], // ratio setting: 0 ~ 1
             ord_type: "market",
           };
           await orderCryptocurrency
             .askOrderCryptocurrency(askBody)
             .then((result) => {
-              console.log("5000KRW 만큼의 BTC를 매도하였습니다.");
+              console.log(
+                `${currentMainTokentoKRW}만큼의 ${tradingToken.TRADING_TOKEN.mainToken}의 볼륨인 ${askBody.volume}을 시장가 매도했습니다.`
+              );
               console.log(result);
               console.log("보유중인 자산: ");
               console.log(getAllAccountsInfo);
@@ -164,7 +183,7 @@ async function fetchData() {
             });
         }
       }
-    }, 60000);
+    }, 2000);
   } catch (error) {
     console.error(error);
   }
