@@ -33,9 +33,16 @@ async function findMainToken() {
 /**
  * INFO:
  * Trading Bot
+ *
  * TODO:
  * 1. Currently, the bot trades in minute timeframes, so if you're looking for a short hit, you'll need to fetch information and trade in secondary timeframes.
  * 2. When you change the coin type and market type, you have to manually change everything. We need to create a constants file to manage the variables globally so that we can automate it.
+ *
+ * IF: Change trading token
+ * 1. (*) Change the token in constant.js file ref. in the markets.js file
+ * 2. ( ) Change period and multiplier in bb.js
+ * 3. ( ) Change Query String(count) in ticker.js/getDailyCandlesInfo function
+ * 4. ( ) Change your buy and sell ratios to account for risk
  */
 
 async function fetchData() {
@@ -57,14 +64,13 @@ async function fetchData() {
     const isBalance = getAllAccountsInfo.map((item) => item.balance);
     const idxKRW = await findKRW();
     const idxMainToken = await findMainToken();
+    const limitBalance = isBalance[idxKRW] / 2;
 
     console.log("보유중인 자산: ");
     console.log(getAllAccountsInfo);
     console.log("----------------------------------------------------");
     // 자산 운용 상한선 기준: 내 자산의 50%까지만 가용
-
     if (isCurrency[idxKRW] === tradingToken.TRADING_TOKEN.krw) {
-      const limitBalance = isBalance[idxKRW] / 2;
       console.log(
         `보유중인 ${tradingToken.TRADING_TOKEN.krw}: ${isBalance[idxKRW]}`
       );
@@ -91,25 +97,19 @@ async function fetchData() {
        * 매매 프로세스
        */
 
-      if (minuteCandlePrice <= lowerBand * 1.05) {
+      if (minuteCandlePrice <= lowerBand * 1.01) {
         // 1. BB의 Lower Band 보다 가격이 낮을 때 구매
         console.log("====================================================");
         console.log(
-          lowerBand +
+          lowerBand * 1.01 +
             " lowerBand의 가격에 근접한 종가로 현재 종가는 " +
             minuteCandlePrice +
             " 입니다."
         );
-        const isCurrency = await accountsInfo
-          .getAllAccountsInfo()
-          .map((item) => item.currency);
-        const isBalance = await accountsInfo
-          .getAllAccountsInfo()
-          .map((item) => item.balance);
         if (
           isCurrency[idxKRW] === tradingToken.TRADING_TOKEN.krw &&
           isBalance[idxKRW] > 5000 &&
-          limitBalance > isBalance[idxKRW]
+          limitBalance < isBalance[idxKRW]
         ) {
           console.log("====================================================");
           // 매수 주문
@@ -183,7 +183,7 @@ async function fetchData() {
             });
         }
       }
-    }, 2000);
+    }, 1200000); //ms 단위, 1000ms to 1s
   } catch (error) {
     console.error(error);
   }
