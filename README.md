@@ -8,7 +8,8 @@
 - 주기적으로 분별 캔들 정보 조회 API Call
 - Bollinger Bands 기법에 의거하여 자동으로 암호화폐 매매 수행
 - 아래 사진은 **잘 동작하는 것을 확인**
-  ![real-result](image/real-result.png)
+
+![real-result](image/real-result.png)
 
 ## 자동 암호화폐 매매 봇 구현 1(with.Upbit Open API)
 
