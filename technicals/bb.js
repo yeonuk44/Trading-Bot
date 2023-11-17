@@ -1,5 +1,7 @@
 function bb(tradePrices) {
   const period = 20;
+  const multiplier = 2;
+
   const movingAverages = [];
   for (let i = 0; i <= tradePrices.length - period; i++) {
     const average =
@@ -17,9 +19,9 @@ function bb(tradePrices) {
   );
 
   // 볼린저 밴드 계산
-  const upperBand = movingAverages[0] + 2 * standardDeviation;
+  const upperBand = movingAverages[0] + multiplier * standardDeviation;
   const middleBand = movingAverages[0];
-  const lowerBand = movingAverages[0] - 2 * standardDeviation;
+  const lowerBand = movingAverages[0] - multiplier * standardDeviation;
 
   // 객체로 결과 저장
   const bollingerBands = {
