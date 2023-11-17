@@ -1,6 +1,12 @@
 # Toy Project: Auto Trading Bot(with.Upbit Open API)
 
-업비트 Open API로 진행합니다.
+## Summary
+
+- Upbit Open API로 진행합니다.
+- Bollinger Bands 기법을 로직으로 코드 작성
+- 일별 캔들 정보 넣고 매매 범위 고정
+- 주기적으로 분별 캔들 정보 조회 API Call
+- Bollinger Bands 기법에 의거하여 자동으로 암호화폐 매매 수행
 
 ![real-result](image/real-result.png)
 **잘 작동하는 모습**
