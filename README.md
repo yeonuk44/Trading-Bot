@@ -1,4 +1,6 @@
-# Toy Project: Auto Trading Bot(with.Upbit Open API)
+# Toy Project ;Auto Trading Bot(with.Upbit Open API)
+
+:Prepare Toy Project:
 
 ## Summary
 
