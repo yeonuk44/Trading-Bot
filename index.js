@@ -69,21 +69,20 @@ async function fetchData() {
     console.log("보유중인 자산: ");
     console.log(getAllAccountsInfo);
     console.log("----------------------------------------------------");
+
     // 자산 운용 상한선 기준: 내 자산의 50%까지만 가용
     if (isCurrency[idxKRW] === tradingToken.TRADING_TOKEN.krw) {
       console.log(
         `보유중인 ${tradingToken.TRADING_TOKEN.krw}: ${isBalance[idxKRW]}`
       );
-      console.log("현재 가용이 가능한 자산의 금액: " + limitBalance);
+      console.log("현재 가용 자산의 금액(KRW): " + limitBalance);
     } else {
       console.log(`더 이상 ${tradingToken.TRADING_TOKEN.krw}가 없습니다.`);
-      // 트레이딩 봇 종료
-      clearInterval(minuteInterval);
+      return;
     }
 
     // API Call every minute
     const minuteInterval = setInterval(async () => {
-      getAllAccountsInfo = await accountsInfo.getAllAccountsInfo();
       const minuteFetchData = await getCandlesInfo.getMinuteCandleInfo();
       const minuteCandlePrice = minuteFetchData.map((item) => item.price);
       const minuteCandleTime = minuteFetchData.map((item) => item.time);
@@ -183,7 +182,12 @@ async function fetchData() {
             });
         }
       }
-    }, 1200000); //ms 단위, 1000ms to 1s
+      if (isCurrency[idxKRW] !== tradingToken.TRADING_TOKEN.krw) {
+        console.log(`더 이상 ${tradingToken.TRADING_TOKEN.krw}가 없습니다.`);
+        // 트레이딩 봇 종료
+        clearInterval(minuteInterval);
+      }
+    }, 3600000); //ms 단위, 1000ms to 1s
   } catch (error) {
     console.error(error);
   }
