@@ -71,6 +71,10 @@ async function fetchData() {
     console.log("----------------------------------------------------");
 
     // 자산 운용 상한선 기준: 내 자산의 50%까지만 가용
+    /**
+     * TODO:
+     * 내 자산의 기준으로 비교할 때, 보유한 토큰의 KRW 가치도 포함하여 총 자산에서 가용 자산을 분별할 수 있게 해야함.
+     */
     if (isCurrency[idxKRW] === tradingToken.TRADING_TOKEN.krw) {
       console.log(
         `보유중인 ${tradingToken.TRADING_TOKEN.krw}: ${isBalance[idxKRW]}`
@@ -95,7 +99,6 @@ async function fetchData() {
        * INFO:
        * 매매 프로세스
        */
-
       if (minuteCandlePrice <= lowerBand * 1.001) {
         // 1. BB의 Lower Band 보다 가격이 낮을 때 구매
         console.log("====================================================");
@@ -105,10 +108,19 @@ async function fetchData() {
             minuteCandlePrice +
             " 입니다."
         );
-        if (
+
+        if (limitBalance > isBalance[idxKRW]) {
+          console.log("====================================================");
+          console.log(
+            `더 이상 ${tradingToken.TRADING_TOKEN.krw}가 없습니다. 현재 가용 자산은 ${isBalance[idxKRW]} 입니다.`
+          );
+          console.log("보유중인 자산: ");
+          console.log(getAllAccountsInfo);
+          // 트레이딩 봇 종료
+          // clearInterval(minuteInterval);
+        } else if (
           isCurrency[idxKRW] === tradingToken.TRADING_TOKEN.krw &&
-          isBalance[idxKRW] > 5000 &&
-          limitBalance < isBalance[idxKRW]
+          isBalance[idxKRW] > 5000
         ) {
           console.log("====================================================");
           // 매수 주문
@@ -181,11 +193,6 @@ async function fetchData() {
               console.error(error);
             });
         }
-      }
-      if (isBalance[idxKRW] < limitBalance) {
-        console.log(`더 이상 ${tradingToken.TRADING_TOKEN.krw}가 없습니다.`);
-        // 트레이딩 봇 종료
-        clearInterval(minuteInterval);
       }
     }, 60000); //ms 단위, 1000ms to 1s
   } catch (error) {
