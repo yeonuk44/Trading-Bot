@@ -96,7 +96,7 @@ async function fetchData() {
        * 매매 프로세스
        */
 
-      if (minuteCandlePrice <= lowerBand * 1.01) {
+      if (minuteCandlePrice <= lowerBand * 1.001) {
         // 1. BB의 Lower Band 보다 가격이 낮을 때 구매
         console.log("====================================================");
         console.log(
@@ -115,7 +115,7 @@ async function fetchData() {
           const bidBody = {
             market: `${tradingToken.TRADING_TOKEN.krw}-${tradingToken.TRADING_TOKEN.mainToken}`,
             side: "bid",
-            price: "5000",
+            price: "42000",
             ord_type: "price",
           };
           await orderCryptocurrency
@@ -133,7 +133,7 @@ async function fetchData() {
               console.error(error);
             });
         }
-      } else if (minuteCandlePrice >= upperBand * 0.95) {
+      } else if (minuteCandlePrice >= upperBand * 0.975) {
         // 2. BB의 Upper Band 보다 가격이 높을 때 판매
         console.log("====================================================");
         console.log(
@@ -182,12 +182,12 @@ async function fetchData() {
             });
         }
       }
-      if (isCurrency[idxKRW] !== tradingToken.TRADING_TOKEN.krw) {
+      if (isBalance[idxKRW] < limitBalance) {
         console.log(`더 이상 ${tradingToken.TRADING_TOKEN.krw}가 없습니다.`);
         // 트레이딩 봇 종료
         clearInterval(minuteInterval);
       }
-    }, 3600000); //ms 단위, 1000ms to 1s
+    }, 60000); //ms 단위, 1000ms to 1s
   } catch (error) {
     console.error(error);
   }
