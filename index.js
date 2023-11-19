@@ -60,26 +60,39 @@ async function fetchData() {
     const lowerBand = dailyFetchData["Lower Band"];
 
     let getAllAccountsInfo = await accountsInfo.getAllAccountsInfo();
-    const isCurrency = getAllAccountsInfo.map((item) => item.currency);
-    const isBalance = getAllAccountsInfo.map((item) => item.balance);
+    let isCurrency = getAllAccountsInfo.map((item) => item.currency);
+    let isBalance = getAllAccountsInfo.map((item) => item.balance);
     const idxKRW = await findKRW();
     const idxMainToken = await findMainToken();
-    const limitBalance = isBalance[idxKRW] / 2;
+    const limitBalance = 900000;
+    const ratioLowerBand = 1.5;
+    const ratioUpperBand = 0.975;
+    let isTrading = false;
 
-    console.log("보유중인 자산: ");
+    console.log("매매 시작 전 보유 자산: ");
     console.log(getAllAccountsInfo);
     console.log("----------------------------------------------------");
 
-    // 자산 운용 상한선 기준: 내 자산의 50%까지만 가용
+    // 자산 여액 지정가 기준: 자산의 50%
     /**
      * TODO:
      * 내 자산의 기준으로 비교할 때, 보유한 토큰의 KRW 가치도 포함하여 총 자산에서 가용 자산을 분별할 수 있게 해야함.
      */
+    // const limitBalance = isBalance[idxKRW] / 2;
+    // if (isCurrency[idxKRW] === tradingToken.TRADING_TOKEN.krw) {
+    //   console.log(
+    //     `보유중인 ${tradingToken.TRADING_TOKEN.krw}: ${isBalance[idxKRW]}`
+    //   );
+    //   console.log("현재 가용 자산의 금액(KRW): " + limitBalance);
+    // } else {
+    //   console.log(`더 이상 ${tradingToken.TRADING_TOKEN.krw}가 없습니다.`);
+    //   return;
+    // }
     if (isCurrency[idxKRW] === tradingToken.TRADING_TOKEN.krw) {
       console.log(
         `보유중인 ${tradingToken.TRADING_TOKEN.krw}: ${isBalance[idxKRW]}`
       );
-      console.log("현재 가용 자산의 금액(KRW): " + limitBalance);
+      console.log("자산 여액 지정가(KRW): " + limitBalance);
     } else {
       console.log(`더 이상 ${tradingToken.TRADING_TOKEN.krw}가 없습니다.`);
       return;
@@ -87,9 +100,16 @@ async function fetchData() {
 
     // API Call every minute
     const minuteInterval = setInterval(async () => {
+      getAllAccountsInfo = await accountsInfo.getAllAccountsInfo();
+      isCurrency = getAllAccountsInfo.map((item) => item.currency);
+      isBalance = getAllAccountsInfo.map((item) => item.balance);
       const minuteFetchData = await getCandlesInfo.getMinuteCandleInfo();
       const minuteCandlePrice = minuteFetchData.map((item) => item.price);
       const minuteCandleTime = minuteFetchData.map((item) => item.time);
+      if (isTrading) {
+        console.log("매매 후 보유중인 자산: ");
+        console.log(getAllAccountsInfo);
+      }
 
       console.log("====================================================");
       console.log(
@@ -99,11 +119,11 @@ async function fetchData() {
        * INFO:
        * 매매 프로세스
        */
-      if (minuteCandlePrice <= lowerBand * 1.001) {
+      if (minuteCandlePrice <= lowerBand * ratioLowerBand) {
         // 1. BB의 Lower Band 보다 가격이 낮을 때 구매
         console.log("====================================================");
         console.log(
-          lowerBand * 1.01 +
+          lowerBand * ratioLowerBand +
             " lowerBand의 가격에 근접한 종가로 현재 종가는 " +
             minuteCandlePrice +
             " 입니다."
@@ -112,7 +132,10 @@ async function fetchData() {
         if (limitBalance > isBalance[idxKRW]) {
           console.log("====================================================");
           console.log(
-            `더 이상 ${tradingToken.TRADING_TOKEN.krw}가 없습니다. 현재 가용 자산은 ${isBalance[idxKRW]} 입니다.`
+            `현재 가용 자산은 ${isBalance[idxKRW]} 입니다. 자산 여액 지정가(KRW)는 ${limitBalance} 이기 때문에 더 이상 매수를 진행할 ${tradingToken.TRADING_TOKEN.krw}가 없습니다.`
+          );
+          console.log(
+            "매도 프로세스만 수행하겠습니다. 매수를 위해선 KRW를 확보해주십시오."
           );
           console.log("보유중인 자산: ");
           console.log(getAllAccountsInfo);
@@ -137,26 +160,32 @@ async function fetchData() {
                 `${bidBody.price}${tradingToken.TRADING_TOKEN.krw} 만큼의 ${tradingToken.TRADING_TOKEN.mainToken}를 매수했습니다.`
               );
               console.log(result);
-              console.log("보유중인 자산: ");
-              console.log(getAllAccountsInfo);
             })
             .catch((error) => {
               console.log("매매 실패");
               console.error(error);
             });
         }
-      } else if (minuteCandlePrice >= upperBand * 0.975) {
+      } else if (minuteCandlePrice >= upperBand * ratioUpperBand) {
         // 2. BB의 Upper Band 보다 가격이 높을 때 판매
         console.log("====================================================");
         console.log(
-          upperBand +
+          upperBand * ratioUpperBand +
             " upperBand의 가격에 근접한 종가로 현재 종가는 " +
             minuteCandlePrice +
             " 입니다."
         );
-        // 토큰의 KRW 가치 환산 Response value가 없어 따로 계산
+        /**
+         * INFO:
+         * 토큰의 KRW 가치 환산 Response value가 없어 따로 계산
+         *
+         * TODO:
+         * 현재 토큰의 가격이 KRW와 다르게 바로 갱신되지 않는 네트워크 통신 부분의 이슈가 있음.
+         * 업비트 Open API 고객센터에 메일 문의를 보내놓았고, 네트워크 이슈라면 고치면 되는데 코드상의 문제가 있을 수 있기에 다시 살펴볼 필요 있음.
+         * 네트워크 지연에 따른 문제로 확정된다면 시장가로 한 번에 물량 매도가 되지 않을 것임.
+         */
         let currentMainTokentoKRW = isBalance[idxMainToken]
-          ? isBalance[idxMainToken]
+          ? isBalance[idxMainToken] * minuteCandlePrice
           : 0 * minuteCandlePrice;
         console.log("====================================================");
         console.log(
@@ -194,7 +223,7 @@ async function fetchData() {
             });
         }
       }
-    }, 60000); //ms 단위, 1000ms to 1s
+    }, 3000); //ms 단위, 1000ms to 1s
   } catch (error) {
     console.error(error);
   }
